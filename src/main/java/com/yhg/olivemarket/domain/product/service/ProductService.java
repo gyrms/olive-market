@@ -89,10 +89,9 @@ public class ProductService {
     @Transactional
     public ProductResponse create(CreateProductRequest request) {
         // 1. 카테고리 조회 (없으면 예외)
-        // ErrorCode에 CATEGORY_NOT_FOUND 추가 필요 시 ErrorCode.java에 추가
+        // CATEGORY_NOT_FOUND: 상품 등록 시 존재하지 않는 카테고리 ID를 요청한 경우
         Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new CustomException(ErrorCode.PRODUCT_NOT_FOUND));
-        // TODO: CATEGORY_NOT_FOUND 에러코드 추가 후 교체
+                .orElseThrow(() -> new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
 
         // 2. Product 엔티티 생성
         Product product = Product.builder()
