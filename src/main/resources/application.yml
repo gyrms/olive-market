@@ -9,7 +9,7 @@ spring:
   # ============================================================
   datasource:
     # 로컬 MySQL 서버 접속 정보 (Docker Compose 사용 시 호스트명 변경 필요)
-    url: jdbc:mysql://localhost:3306/olive_market?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/olive_market?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
     username: root
     password: 1234
     driver-class-name: com.mysql.cj.jdbc.Driver
@@ -24,6 +24,9 @@ spring:
       # validate: 스키마 검증만 (운영)
       # none: 아무것도 안 함
       ddl-auto: create
+    # MariaDB + MySQL 커넥터 호환성 이슈로 Dialect 명시 필요
+    # MySQL 커넥터 8.x가 MariaDB에 없는 메타데이터 컬럼 조회 시 오류 발생
+    database-platform: org.hibernate.dialect.MariaDBDialect
     properties:
       hibernate:
         # 실행되는 SQL을 콘솔에 출력 (개발 시 ON, 운영 시 OFF)
