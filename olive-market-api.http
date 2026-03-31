@@ -1,0 +1,439 @@
+### Olive Market API - IntelliJ HTTP Client
+### 사용법: 각 요청 위 ▶ 버튼 클릭 or 단축키 Ctrl+Enter (Mac: Cmd+Enter)
+### 로그인 먼저 실행해야 {{token}} 이 자동으로 채워진다
+
+@baseUrl = http://localhost:8080
+@token = {{login.response.body.$.accessToken}}
+
+###
+# =============================================================
+# 1. 인증 (Auth)
+# =============================================================
+
+### [회원가입] 성공 - 일반 유저
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123",
+  "name": "홍길동"
+}
+
+### [회원가입] 성공 - 어드민 유저 (DB에서 role을 ROLE_ADMIN으로 직접 수정 후 사용)
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "admin@test.com",
+  "password": "password123",
+  "name": "관리자"
+}
+
+### [회원가입] 실패 - 이메일 중복 (409 Conflict)
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123",
+  "name": "중복유저"
+}
+
+### [회원가입] 실패 - 이메일 형식 오류 (400 Bad Request)
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "password": "password123",
+  "name": "홍길동"
+}
+
+### [회원가입] 실패 - 비밀번호 8자 미만 (400 Bad Request)
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "user2@test.com",
+  "password": "short1",
+  "name": "홍길동"
+}
+
+### [회원가입] 실패 - 이름 누락 (400 Bad Request)
+POST {{baseUrl}}/api/auth/join
+Content-Type: application/json
+
+{
+  "email": "user3@test.com",
+  "password": "password123"
+}
+
+### [로그인] 성공 - 토큰 자동 저장 ★ 가장 먼저 실행할 것
+# @name login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "password123"
+}
+
+### [로그인] 실패 - 존재하지 않는 이메일 (404 Not Found)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "nobody@test.com",
+  "password": "password123"
+}
+
+### [로그인] 실패 - 비밀번호 불일치 (401 Unauthorized)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "user@test.com",
+  "password": "wrongpassword"
+}
+
+### [로그인] 실패 - 이메일 형식 오류 (400 Bad Request)
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "password123"
+}
+
+###
+# =============================================================
+# 2. 상품 조회 (Product) - 인증 불필요
+# =============================================================
+
+### [상품 목록] 전체 조회
+GET {{baseUrl}}/api/products
+
+### [상품 목록] 키워드 검색
+GET {{baseUrl}}/api/products?keyword=크림
+
+### [상품 목록] 카테고리 필터
+GET {{baseUrl}}/api/products?categoryId=1
+
+### [상품 목록] 최저가 필터
+GET {{baseUrl}}/api/products?minPrice=10000
+
+### [상품 목록] 최고가 필터
+GET {{baseUrl}}/api/products?maxPrice=30000
+
+### [상품 목록] 가격 범위 필터
+GET {{baseUrl}}/api/products?minPrice=10000&maxPrice=50000
+
+### [상품 목록] 키워드 + 카테고리
+GET {{baseUrl}}/api/products?keyword=크림&categoryId=1
+
+### [상품 목록] 키워드 + 가격 범위
+GET {{baseUrl}}/api/products?keyword=크림&minPrice=10000&maxPrice=50000
+
+### [상품 목록] 전체 조건 조합
+GET {{baseUrl}}/api/products?keyword=크림&categoryId=1&minPrice=10000&maxPrice=50000
+
+### [상품 상세] 성공
+GET {{baseUrl}}/api/products/1
+
+### [상품 상세] 실패 - 존재하지 않는 ID (404 Not Found)
+GET {{baseUrl}}/api/products/999999
+
+###
+# =============================================================
+# 3. 상품 등록 (Product) - ADMIN 권한 필요
+#    DB에서 role = 'ROLE_ADMIN' 으로 변경 후 admin@test.com 으로 로그인
+# =============================================================
+
+### [상품 등록] 성공 - 설명 포함 (201 Created)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "수분 크림",
+  "price": 25000,
+  "stock": 100,
+  "description": "촉촉한 수분 크림입니다.",
+  "categoryId": 1
+}
+
+### [상품 등록] 성공 - 설명 없이
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "선크림 SPF50",
+  "price": 18000,
+  "stock": 50,
+  "categoryId": 2
+}
+
+### [상품 등록] 실패 - 인증 없음 (401 Unauthorized)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+
+{
+  "name": "수분 크림",
+  "price": 25000,
+  "stock": 100,
+  "categoryId": 1
+}
+
+### [상품 등록] 실패 - USER 권한 (403 Forbidden) - user 토큰으로 실행
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "수분 크림",
+  "price": 25000,
+  "stock": 100,
+  "categoryId": 1
+}
+
+### [상품 등록] 실패 - 존재하지 않는 카테고리 (404 Not Found)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "수분 크림",
+  "price": 25000,
+  "stock": 100,
+  "categoryId": 999999
+}
+
+### [상품 등록] 실패 - 상품명 누락 (400 Bad Request)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "price": 25000,
+  "stock": 100,
+  "categoryId": 1
+}
+
+### [상품 등록] 실패 - 가격 음수 (400 Bad Request)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "수분 크림",
+  "price": -1000,
+  "stock": 100,
+  "categoryId": 1
+}
+
+### [상품 등록] 실패 - 재고 음수 (400 Bad Request)
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "수분 크림",
+  "price": 25000,
+  "stock": -1,
+  "categoryId": 1
+}
+
+###
+# =============================================================
+# 4. 장바구니 (Cart) - JWT 인증 필요
+# =============================================================
+
+### [장바구니 담기] 성공
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "productId": 1,
+  "quantity": 3
+}
+
+### [장바구니 담기] 성공 - 다른 상품 추가
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "productId": 2,
+  "quantity": 1
+}
+
+### [장바구니 담기] 성공 - 같은 상품 수량 변경 (덮어쓰기)
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "productId": 1,
+  "quantity": 5
+}
+
+### [장바구니 담기] 실패 - 수량 0 (400 Bad Request)
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "productId": 1,
+  "quantity": 0
+}
+
+### [장바구니 담기] 실패 - 수량 음수 (400 Bad Request)
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "productId": 1,
+  "quantity": -1
+}
+
+### [장바구니 담기] 실패 - productId 누락 (400 Bad Request)
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "quantity": 3
+}
+
+### [장바구니 담기] 실패 - 인증 없음 (401 Unauthorized)
+POST {{baseUrl}}/api/cart
+Content-Type: application/json
+
+{
+  "productId": 1,
+  "quantity": 3
+}
+
+### [장바구니 조회] 성공
+GET {{baseUrl}}/api/cart
+Authorization: Bearer {{token}}
+
+### [장바구니 조회] 실패 - 인증 없음 (401 Unauthorized)
+GET {{baseUrl}}/api/cart
+
+### [장바구니 삭제] 성공 - 특정 상품 삭제 (204 No Content)
+DELETE {{baseUrl}}/api/cart/1
+Authorization: Bearer {{token}}
+
+### [장바구니 삭제] 성공 - 없는 상품 ID도 에러 없이 처리
+DELETE {{baseUrl}}/api/cart/999999
+Authorization: Bearer {{token}}
+
+### [장바구니 삭제] 실패 - 인증 없음 (401 Unauthorized)
+DELETE {{baseUrl}}/api/cart/1
+
+###
+# =============================================================
+# 5. 주문 (Order) - JWT 인증 필요
+# =============================================================
+
+### [주문 생성] 성공 - 단일 상품 (201 Created)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": [
+    { "productId": 1, "quantity": 1 }
+  ]
+}
+
+### [주문 생성] 성공 - 여러 상품
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": [
+    { "productId": 1, "quantity": 2 },
+    { "productId": 2, "quantity": 1 }
+  ]
+}
+
+### [주문 생성] 실패 - 재고 부족 (400 Bad Request)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": [
+    { "productId": 1, "quantity": 999999 }
+  ]
+}
+
+### [주문 생성] 실패 - 존재하지 않는 상품 (404 Not Found)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": [
+    { "productId": 999999, "quantity": 1 }
+  ]
+}
+
+### [주문 생성] 실패 - 주문 목록 비어있음 (400 Bad Request)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": []
+}
+
+### [주문 생성] 실패 - 수량 0 (400 Bad Request)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "orderItems": [
+    { "productId": 1, "quantity": 0 }
+  ]
+}
+
+### [주문 생성] 실패 - 인증 없음 (401 Unauthorized)
+POST {{baseUrl}}/api/orders
+Content-Type: application/json
+
+{
+  "orderItems": [
+    { "productId": 1, "quantity": 1 }
+  ]
+}
+
+### [내 주문 목록] 성공
+GET {{baseUrl}}/api/orders
+Authorization: Bearer {{token}}
+
+### [내 주문 목록] 실패 - 인증 없음 (401 Unauthorized)
+GET {{baseUrl}}/api/orders
+
+### [주문 상세] 성공
+GET {{baseUrl}}/api/orders/1
+Authorization: Bearer {{token}}
+
+### [주문 상세] 실패 - 존재하지 않는 주문 (404 Not Found)
+GET {{baseUrl}}/api/orders/999999
+Authorization: Bearer {{token}}
+
+### [주문 상세] 실패 - 타인 주문 접근 (403 Forbidden) - 다른 계정의 주문 ID로 변경해서 실행
+GET {{baseUrl}}/api/orders/2
+Authorization: Bearer {{token}}
+
+### [주문 상세] 실패 - 인증 없음 (401 Unauthorized)
+GET {{baseUrl}}/api/orders/1
