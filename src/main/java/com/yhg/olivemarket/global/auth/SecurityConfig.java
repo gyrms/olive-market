@@ -74,6 +74,9 @@ public class SecurityConfig {
 
                 // 요청별 인가(Authorization) 설정
                 .authorizeHttpRequests(auth -> auth
+                        // Swagger UI → 인증 없이 접근 가능
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
                         // 회원가입, 로그인 → 인증 없이 접근 가능 (공개 API)
                         .requestMatchers("/api/auth/**").permitAll()
 
