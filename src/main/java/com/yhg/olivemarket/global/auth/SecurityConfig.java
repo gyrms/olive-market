@@ -86,6 +86,12 @@ public class SecurityConfig {
                         // 상품 등록 → ADMIN만 접근 가능
                         .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN")
 
+                        // 카테고리 목록 조회 → 인증 없이 접근 가능
+                        .requestMatchers(HttpMethod.GET, "/api/categories").permitAll()
+
+                        // 카테고리 등록 → ADMIN만 접근 가능
+                        .requestMatchers(HttpMethod.POST, "/api/categories").hasRole("ADMIN")
+
                         // 그 외 모든 요청 → 인증 필요 (JWT 토큰 있어야 함)
                         .anyRequest().authenticated()
                 )
